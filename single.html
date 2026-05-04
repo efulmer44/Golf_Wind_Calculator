@@ -110,7 +110,6 @@
         </div>
 
         <button type="button" onclick="backToPin()">Previous</button>
-        <button type="button" onclick="reset()">Start Over</button>
     </div>
 
     <script>
@@ -181,11 +180,6 @@
 
         function backToPin() {
             showSection('pinSection');
-        }
-
-        function reset() {
-            localStorage.clear();
-            location.reload();
         }
 
         function calculate() {
