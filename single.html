@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golf Wind Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        label { display: block; margin-bottom: 10px; }
+        select, input, button { padding: 8px; margin-bottom: 20px; }
+        .distance { display: flex; align-items: center; }
+        .distance input { margin-right: 5px; }
+        .section { display: none; }
+        .active { display: block; }
+        .summary { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Golf Wind Calculator</h1>
+
+    <!-- Wind Direction Section -->
+    <div id="windSection" class="section active">
+        <h2>Wind Direction</h2>
+        <p id="currentWind"></p>
+        <form id="windForm">
+            <label for="windDirection">Direction the wind is coming from today:</label>
+            <select id="windDirection" name="windDirection">
+                <option value="">Select direction</option>
+                <option value="N">N (0°)</option>
+                <option value="NNE">NNE (22.5°)</option>
+                <option value="NE">NE (45°)</option>
+                <option value="ENE">ENE (67.5°)</option>
+                <option value="E">E (90°)</option>
+                <option value="ESE">ESE (112.5°)</option>
+                <option value="SE">SE (135°)</option>
+                <option value="SSE">SSE (157.5°)</option>
+                <option value="S">S (180°)</option>
+                <option value="SSW">SSW (202.5°)</option>
+                <option value="SW">SW (225°)</option>
+                <option value="WSW">WSW (247.5°)</option>
+                <option value="W">W (270°)</option>
+                <option value="WNW">WNW (292.5°)</option>
+                <option value="NW">NW (315°)</option>
+                <option value="NNW">NNW (337.5°)</option>
+            </select>
+
+            <label for="windSpeed">Wind Speed:</label>
+            <div class="distance">
+                <input type="number" id="windSpeed" name="windSpeed" placeholder="Speed" min="0" step="any">
+                <span>mph</span>
+            </div>
+
+            <button type="button" onclick="nextToPin()">Next</button>
+        </form>
+    </div>
+
+    <!-- Pin Details Section -->
+    <div id="pinSection" class="section">
+        <h2>Pin Details</h2>
+        <p>Current wind direction: <strong id="windDirectionDisplay"></strong> <button type="button" onclick="editWind()">Edit wind direction</button></p>
+        <form id="pinForm">
+            <label for="pinDirection">Pin Direction:</label>
+            <select id="pinDirection" name="pinDirection">
+                <option value="">Select direction</option>
+                <option value="N">N (0°)</option>
+                <option value="NNE">NNE (22.5°)</option>
+                <option value="NE">NE (45°)</option>
+                <option value="ENE">ENE (67.5°)</option>
+                <option value="E">E (90°)</option>
+                <option value="ESE">ESE (112.5°)</option>
+                <option value="SE">SE (135°)</option>
+                <option value="SSE">SSE (157.5°)</option>
+                <option value="S">S (180°)</option>
+                <option value="SSW">SSW (202.5°)</option>
+                <option value="SW">SW (225°)</option>
+                <option value="WSW">WSW (247.5°)</option>
+                <option value="W">W (270°)</option>
+                <option value="WNW">WNW (292.5°)</option>
+                <option value="NW">NW (315°)</option>
+                <option value="NNW">NNW (337.5°)</option>
+            </select>
+
+            <label>Distance to Pin:</label>
+            <div class="distance">
+                <input type="number" id="distanceWithSlope" name="distanceWithSlope" placeholder="With slope">
+                <span>yrds</span>
+            </div>
+            <div class="distance">
+                <input type="number" id="distanceWithoutSlope" name="distanceWithoutSlope" placeholder="Without slope">
+                <span>yrds</span>
+            </div>
+
+            <button type="button" onclick="backToWind()">Previous</button>
+            <button type="button" onclick="calculate()">Calculate</button>
+        </form>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultSection" class="section">
+        <h2>Summary and Playing Distance</h2>
+        <p>Current wind direction: <strong id="windDirectionDisplay2"></strong> <button type="button" onclick="editWind()">Edit wind direction</button></p>
+
+        <div class="summary">
+            <h2>Wind Direction: <span id="windDir"></span></h2>
+            <h2>Pin Direction: <span id="pinDir"></span></h2>
+            <h2>Distance with Slope: <span id="distWith"></span> yrds</h2>
+            <h2>Distance without Slope: <span id="distWithout"></span> yrds</h2>
+            <h2>Calculated Playing Distance: <span id="playingResult"></span> yrds</h2>
+        </div>
+
+        <button type="button" onclick="backToPin()">Previous</button>
+        <button type="button" onclick="reset()">Start Over</button>
+    </div>
+
+    <script>
+        function getDegrees(direction) {
+            const degMap = {
+                'N': 0,
+                'NNE': 22.5,
+                'NE': 45,
+                'ENE': 67.5,
+                'E': 90,
+                'ESE': 112.5,
+                'SE': 135,
+                'SSE': 157.5,
+                'S': 180,
+                'SSW': 202.5,
+                'SW': 225,
+                'WSW': 247.5,
+                'W': 270,
+                'WNW': 292.5,
+                'NW': 315,
+                'NNW': 337.5
+            };
+            return degMap[direction] || 0;
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+        }
+
+        window.onload = function() {
+            const storedDirection = localStorage.getItem('windDirection');
+            if (storedDirection) {
+                document.getElementById('windDirection').value = storedDirection;
+            }
+            const storedSpeed = localStorage.getItem('windSpeed');
+            if (storedSpeed) {
+                document.getElementById('windSpeed').value = storedSpeed;
+            }
+            if (storedDirection || storedSpeed) {
+                const directionText = storedDirection ? storedDirection : 'unknown direction';
+                const speedText = storedSpeed ? storedSpeed + ' mph' : 'unknown speed';
+                document.getElementById('currentWind').textContent = 'Current saved wind: ' + directionText + ' at ' + speedText;
+            }
+        };
+
+        function nextToPin() {
+            const windDirection = document.getElementById('windDirection').value;
+            const windSpeed = document.getElementById('windSpeed').value;
+            if (windDirection && windSpeed) {
+                localStorage.setItem('windDirection', windDirection);
+                localStorage.setItem('windSpeed', windSpeed);
+                document.getElementById('windDirectionDisplay').textContent = windDirection;
+                document.getElementById('windDirectionDisplay2').textContent = windDirection;
+                showSection('pinSection');
+            } else {
+                alert('Please select wind direction and enter wind speed.');
+            }
+        }
+
+        function backToWind() {
+            showSection('windSection');
+        }
+
+        function editWind() {
+            showSection('windSection');
+        }
+
+        function backToPin() {
+            showSection('pinSection');
+        }
+
+        function reset() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        function calculate() {
+            const pinDirection = document.getElementById('pinDirection').value;
+            const distanceWithSlope = parseFloat(document.getElementById('distanceWithSlope').value);
+            const distanceWithoutSlope = parseFloat(document.getElementById('distanceWithoutSlope').value);
+
+            if (!pinDirection || isNaN(distanceWithSlope) || isNaN(distanceWithoutSlope)) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            const windDirection = localStorage.getItem('windDirection');
+            const windSpeed = parseFloat(localStorage.getItem('windSpeed')) || 0;
+            const windDeg = (getDegrees(windDirection) + 180) % 360; // from-source to toward-pin
+            const pinDeg = getDegrees(pinDirection);
+            let diff = Math.abs(windDeg - pinDeg);
+            if (diff > 180) diff = 360 - diff;
+
+            const multiplier = 0.5 - 1.5 * (diff / 180);
+            const adjustment = multiplier * windSpeed / 100;
+            const effectiveBase = multiplier < 0
+                ? distanceWithoutSlope * (1 + Math.abs(adjustment))
+                : distanceWithoutSlope * (1 - adjustment);
+
+            const slopeEffect = distanceWithSlope - distanceWithoutSlope;
+            const returnedDistance = effectiveBase + slopeEffect;
+
+            document.getElementById('windDir').textContent = windDirection;
+            document.getElementById('pinDir').textContent = pinDirection;
+            document.getElementById('distWith').textContent = distanceWithSlope;
+            document.getElementById('distWithout').textContent = distanceWithoutSlope;
+            document.getElementById('playingResult').textContent = returnedDistance.toFixed(1);
+
+            showSection('resultSection');
+        }
+    </script>
+</body>
+</html>
